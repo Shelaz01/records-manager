@@ -1,0 +1,55 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "records-manager"
+version = "0.1.0"
+description = "A Tkinter hospital records system with SQLite storage, file borrowing, and scan/OCR entry."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+
+# Tkinter and sqlite3 come from the standard library and are not listed here.
+dependencies = [
+    "pillow",
+    "tkcalendar",
+    "sv-ttk",
+]
+
+[project.optional-dependencies]
+# Scanning and OCR are optional: the app runs without them, with the
+# scan features disabled. pywin32 backs the vendored wia_scan package
+# and only exists on Windows.
+#
+# docopt is only used by wia_scan's command-line entry point, but it is a
+# hard requirement all the same: wia_scan/__init__.py does
+# `from .main import *`, which executes main.py's `from docopt import docopt`
+# (and then `del docopt`), so importing wia_scan raises ModuleNotFoundError
+# without it. Importing a submodule does not avoid this -- Python executes
+# the package __init__ first, so even `import wia_scan.core` needs docopt.
+# Dropping it would mean editing vendored code, which is off-limits.
+scan = [
+    "pytesseract",
+    "opencv-python-headless",
+    "docopt",
+    "pywin32; sys_platform == 'win32'",
+]
+dev = [
+    "pytest",
+]
+
+[project.scripts]
+records-manager = "records_manager.app:main"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+records_manager = ["schema.sql", "assets/*.png"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

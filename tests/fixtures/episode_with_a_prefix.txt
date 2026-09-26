@@ -1,0 +1,7 @@
+Admission Date
+Admission Time          03/11/2022
+Ward                    16:20
+PATIENT DETAILS         WARD 2 NORTH
+First Names             ANNAH    Title MRS    Episode Number A10619:2
+Surname                 MAKANDA
+Date of Birth           09/09/1975     Gender Female    Race

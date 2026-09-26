@@ -1,0 +1,8 @@
+Admission Date
+Admission Time
+Ward
+PATIENT DETAILS
+First Names
+Surname
+Date of Birth
+Episode Number

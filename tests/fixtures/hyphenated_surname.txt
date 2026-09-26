@@ -1,0 +1,8 @@
+Admission Date
+Admission Time          25/01/2024
+Ward                    07:30
+PATIENT DETAILS         WARD 2 NORTH
+First Names             RUVARASHE    Title MRS    Episode Number A50287:4
+Surname                 MAKANDA-NCUBE
+Date of Birth           11/11/1969     Gender Female    Race
+Occupation              NURSE

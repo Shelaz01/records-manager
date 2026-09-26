@@ -1,0 +1,7 @@
+Admission Date
+Admission Time          21/02/2024
+Ward                    08:15
+PATIENT DETAILS         WARD 4 WEST
+First Names             BLESSING    Title MR
+Date of Birth           30/06/2001     Gender Male    Race
+Occupation              STUDENT

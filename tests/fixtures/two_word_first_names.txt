@@ -1,0 +1,8 @@
+Admission Date
+Admission Time          07/09/2023
+Ward                    13:45
+PATIENT DETAILS         WARD 5 EAST
+First Names             TENDAI JOHN    Title MR    Episode Number 30412
+Surname                 GUMBO
+Date of Birth           18/03/1980     Gender Male    Race
+Occupation              ENGINEER

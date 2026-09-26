@@ -1,0 +1,8 @@
+Admissi0n Date           .
+Admission Time           14/07/2022
+Ward                     11 :05
+PATIENT DETA1LS          WARD 1 EAST
+First Names              RUFARO  ,    Title  MR      Episode  Number   A3071:5
+Surname                  CHIKOWORE .
+Date of Birth            22/01/1988      Gender Male     Race
+Zimbabwean Citizen       Yes    |D No.  00-000000-X00

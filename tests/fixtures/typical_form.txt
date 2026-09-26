@@ -1,0 +1,32 @@
+Admission Date
+Admission Time          12/05/2023
+Ward                    09:40
+PATIENT DETAILS         WARD 3 SOUTH
+First Names             THANDIWE    Title MS    Episode Number 20481
+Surname                 NCUBE
+Date of Birth           04/08/1991     Gender Female    Race
+Zimbabwean Citizen      Yes    ID No.  00-000000-X00
+Non Res, Nationality
+Occupation              ZIMBABWEAN
+Employer                TEACHER
+Religion
+Specialist              CHRISTIAN
+Provisional Diagnosis   DR SAMPLE PRACTITIONER
+                        ROUTINE ADMISSION
+
+PATIENT ADDRESS         Are You A Tenant Or Landlord?   Tenant
+Residential             1234 SAMPLE STREET   HARARE
+Postal
+Business
+Telephone               H      B 00      Cell 0770000000
+
+PATIENT ALLERGIES
+Allergies               NIL KNOWN
+
+PATIENT'S NEXT OF KIN (2)
+First Names             TENDAI    Title MR
+Surname                 MOYO      Relationship BROTHER
+
+MEDICAL AID DETAILS
+Member's First Names    TENDAI    Title MR
+Member's Surname        SIBANDA
