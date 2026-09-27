@@ -38,3 +38,6 @@ dist/
 
 # Scans filed beside a database kept in the working tree
 scans/
+
+# Claude Code tool settings, not project source
+.claude/

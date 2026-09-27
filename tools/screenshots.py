@@ -12,11 +12,13 @@ here rather than in the package.
 from __future__ import annotations
 
 import ctypes
+import os
 import shutil
 import sys
 import tempfile
 import time
 import tkinter as tk
+from contextlib import contextmanager
 from ctypes import wintypes
 from pathlib import Path
 
@@ -239,6 +241,28 @@ def set_entry(dialog, key: str, value: str) -> None:
     dialog._variables[key].set(value)
 
 
+@contextmanager
+def without_scan_extras():
+    """Run as though Tesseract and the scanner were absent.
+
+    Sets the switches the application already honours, so the degraded path
+    can be photographed on a machine that has both installed.
+    """
+    from records_manager.scanning import ocr, scanner
+
+    previous = {name: os.environ.get(name)
+                for name in (ocr.DISABLE_ENV, scanner.DISABLE_ENV)}
+    os.environ.update({name: "1" for name in previous})
+    try:
+        yield
+    finally:
+        for name, value in previous.items():
+            if value is None:
+                os.environ.pop(name, None)
+            else:
+                os.environ[name] = value
+
+
 def open_sample(dialog, path: Path) -> None:
     """Load a form into the scan dialog through the real OCR pipeline.
 
@@ -269,9 +293,13 @@ def capture_scan(app: App, workspace: Path) -> None:
               "shots will show an unread form")
 
     # 1. Nothing loaded yet: the fields are shut until a form arrives.
-    #    Where the scanner or Tesseract is missing, this is also where the
-    #    dialog says so -- not visible here, since both are installed.
     capture_dialog(app, view._scan, "30-scan-empty")
+
+    # 2. The same dialog on a machine with neither Tesseract nor a scanner.
+    #    The switches make the real code take the degraded path, so this is
+    #    the genuine screen rather than a mock-up of it.
+    with without_scan_extras():
+        capture_dialog(app, view._scan, "30b-scan-unavailable")
 
     # 2. The form read. 20481 is not in the register, so it is a new patient.
     capture_dialog(app, view._scan, "31-scan-review",

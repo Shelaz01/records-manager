@@ -21,9 +21,24 @@ TESSERACT_CONFIG = "--psm 6 --oem 3"
 #: Override the Tesseract binary location without touching the code.
 TESSERACT_CMD_ENV = "TESSERACT_CMD"
 
+#: Set to any non-empty value to make the application behave as though
+#: Tesseract were not installed. Useful for checking that the degraded path
+#: still works on a machine that does have it, and for documenting that
+#: path, but it is also a way to turn OCR off on a machine where it is
+#: installed but unwanted.
+DISABLE_ENV = "RECORDS_DISABLE_OCR"
+
+
+def _disabled() -> bool:
+    return bool(os.environ.get(DISABLE_ENV))
+
 
 class OCRUnavailableError(RuntimeError):
     """Tesseract or OpenCV is not installed, or Tesseract will not run."""
+
+
+_DISABLED_MESSAGE = (
+    "Text recognition is switched off: unset RECORDS_DISABLE_OCR to use it.")
 
 
 # --------------------------------------------------------------------------- #
@@ -42,6 +57,8 @@ def is_available() -> bool:
     Checks that both libraries import *and* that the Tesseract binary
     responds, since pytesseract installs fine without Tesseract itself.
     """
+    if _disabled():
+        return False
     try:
         import cv2  # noqa: F401
         import pytesseract
@@ -66,6 +83,8 @@ def preprocess(image: Image.Image) -> Image.Image:
     cut-off per image and so copes with the uneven lighting typical of a
     photographed or flatbed-scanned form.
     """
+    if _disabled():
+        raise OCRUnavailableError(_DISABLED_MESSAGE)
     try:
         import cv2
         import numpy as np
@@ -83,6 +102,8 @@ def preprocess(image: Image.Image) -> Image.Image:
 
 def extract_text(image: Image.Image) -> str:
     """Run Tesseract over ``image`` and return the raw recognised text."""
+    if _disabled():
+        raise OCRUnavailableError(_DISABLED_MESSAGE)
     try:
         import pytesseract
     except ImportError as error:  # pragma: no cover - needs [scan] absent

@@ -12,17 +12,32 @@ interaction to the UI layer.
 """
 from __future__ import annotations
 
+import os
 import sys
 
 from PIL import Image
+
+#: Set to any non-empty value to make the application behave as though no
+#: scanner were attached, the same switch as RECORDS_DISABLE_OCR.
+DISABLE_ENV = "RECORDS_DISABLE_SCANNER"
+
+
+def _disabled() -> bool:
+    return bool(os.environ.get(DISABLE_ENV))
 
 
 class ScannerUnavailableError(RuntimeError):
     """No scanner support: wrong platform, missing package, or no device."""
 
 
+_DISABLED_MESSAGE = (
+    "Scanning is switched off: unset RECORDS_DISABLE_SCANNER to use it.")
+
+
 def is_available() -> bool:
     """True when this machine can drive a WIA scanner."""
+    if _disabled():
+        return False
     if sys.platform != "win32":
         return False
     try:
@@ -34,6 +49,8 @@ def is_available() -> bool:
 
 def _require_wia_scan():
     """Import the vendored package, or explain why scanning is unavailable."""
+    if _disabled():
+        raise ScannerUnavailableError(_DISABLED_MESSAGE)
     if sys.platform != "win32":
         raise ScannerUnavailableError(
             "Scanning uses Windows Image Acquisition and is only available "

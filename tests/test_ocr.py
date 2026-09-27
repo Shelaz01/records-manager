@@ -310,15 +310,64 @@ class TestAvailability:
         # The whole point of keeping parsing pure: it needs no binary.
         assert ocr.parse_fields("Episode Number 20481")["hospital_num"] == "20481"
 
-    def test_scanning_raises_a_clear_error_when_unavailable(self) -> None:
-        if scanner.is_available():
-            pytest.skip("a scanner is available on this machine")
-        with pytest.raises(scanner.ScannerUnavailableError):
+class TestUnavailable:
+    """The degraded path, exercised whether or not the extras are installed.
+
+    These used to skip on a machine that had Tesseract, which meant the
+    behaviour that matters most -- what happens on a machine without it --
+    went untested exactly where it was easiest to test.
+    """
+
+    @pytest.fixture
+    def no_ocr(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setenv(ocr.DISABLE_ENV, "1")
+
+    @pytest.fixture
+    def no_scanner(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setenv(scanner.DISABLE_ENV, "1")
+
+    def test_ocr_reports_itself_unavailable(self, no_ocr) -> None:
+        assert ocr.is_available() is False
+
+    def test_scanner_reports_itself_unavailable(self, no_scanner) -> None:
+        assert scanner.is_available() is False
+
+    def test_extract_text_raises_a_clear_error(self, no_ocr) -> None:
+        from PIL import Image
+        with pytest.raises(ocr.OCRUnavailableError, match="switched off"):
+            ocr.extract_text(Image.new("L", (10, 10)))
+
+    def test_preprocess_raises_a_clear_error(self, no_ocr) -> None:
+        from PIL import Image
+        with pytest.raises(ocr.OCRUnavailableError, match="switched off"):
+            ocr.preprocess(Image.new("L", (10, 10)))
+
+    def test_scan_page_raises_a_clear_error(self, no_scanner) -> None:
+        with pytest.raises(scanner.ScannerUnavailableError, match="switched off"):
             scanner.scan_page()
 
-    def test_ocr_raises_a_clear_error_when_unavailable(self) -> None:
-        if ocr.is_available():
-            pytest.skip("Tesseract is available on this machine")
-        from PIL import Image
-        with pytest.raises(ocr.OCRUnavailableError):
-            ocr.extract_text(Image.new("L", (10, 10)))
+    def test_parsing_still_works_without_tesseract(self, no_ocr) -> None:
+        # The whole point of keeping parse_fields pure: reading a form needs
+        # Tesseract, but making sense of the text does not.
+        fields = ocr.parse_fields(read_fixture("typical_form"))
+        assert fields["hospital_num"] == "20481"
+        assert fields["surname"] == "NCUBE"
+
+    def test_the_switches_are_independent(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # Turning OCR off must not claim the scanner is gone too, whatever
+        # this particular machine happens to have attached.
+        baseline = scanner.is_available()
+        monkeypatch.setenv(ocr.DISABLE_ENV, "1")
+        assert ocr.is_available() is False
+        assert scanner.is_available() is baseline
+
+    def test_availability_returns_when_the_switch_is_cleared(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv(ocr.DISABLE_ENV, "1")
+        assert ocr.is_available() is False
+        monkeypatch.delenv(ocr.DISABLE_ENV)
+        # Back to whatever this machine can actually do.
+        assert isinstance(ocr.is_available(), bool)

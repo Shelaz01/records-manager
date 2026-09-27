@@ -71,6 +71,14 @@ That brings in `pytesseract`, `opencv-python-headless` and, on Windows,
 Scanning uses Windows Image Acquisition and so is Windows-only. Everywhere
 else, open a scanned image from disk instead.
 
+Two switches turn these features off on a machine that does have them, which
+is also how the "not installed" path is tested and photographed:
+
+```bash
+RECORDS_DISABLE_OCR=1        # behave as though Tesseract were absent
+RECORDS_DISABLE_SCANNER=1    # behave as though no scanner were attached
+```
+
 The OCR path has been run end to end on **Tesseract 5.5.3**: the screenshots
 of the scan flow below are of `samples/admission-form.png` actually being
 read — preprocessed, passed through Tesseract, and parsed into the review
