@@ -35,3 +35,6 @@ ENV/
 build/
 dist/
 .pytest_cache/
+
+# Scans filed beside a database kept in the working tree
+scans/

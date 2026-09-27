@@ -22,7 +22,6 @@ from pathlib import Path
 
 from PIL import ImageGrab
 
-from forms import render_form
 from records_manager.app import App
 from records_manager.db import Database
 from records_manager.demo import seed_demo
@@ -240,70 +239,60 @@ def set_entry(dialog, key: str, value: str) -> None:
     dialog._variables[key].set(value)
 
 
-def load_form(dialog, image_path: Path, fixture: str) -> None:
-    """Put a form into the scan dialog with its fields already read.
+def open_sample(dialog, path: Path) -> None:
+    """Load a form into the scan dialog through the real OCR pipeline.
 
-    Tesseract is not installed here, so the image-to-text step is the one
-    thing substituted: the fields come from running the real parse_fields
-    over the same fixture the image was drawn from. Everything downstream --
-    title casing, the existing-patient lookup, the mismatch check -- is the
-    application's own code.
+    ``_load`` runs preprocess -> extract_text -> parse_fields, so the fields
+    show what Tesseract actually read off the image, not a stand-in.
     """
     from PIL import Image
 
-    from records_manager.scanning import ocr
-
-    fixture_text = (Path("tests/fixtures") / f"{fixture}.txt").read_text(
-        encoding="utf-8")
-    dialog._image = Image.open(image_path)
-    dialog._source = image_path
-    dialog._show_preview(dialog._image)
-    dialog._apply(ocr.parse_fields(fixture_text))
+    dialog._load(Image.open(path), path)
 
 
 def capture_scan(app: App, workspace: Path) -> None:
-    """The scan flow: unavailable, reviewed, and an already-registered file.
+    """The scan flow, driven end to end through Tesseract.
 
-    Each shot renders the fixture its fields are filled from, so the preview
-    and the form agree. A screenshot whose preview contradicts its fields
-    teaches the reader to distrust both.
+    Every shot reads the same sample form, so the preview and the fields
+    always agree. What changes between them is the register: the number on
+    the form is unknown, then belongs to the patient named on it, then
+    belongs to somebody else.
     """
-    from records_manager.db import Patient, RecordsError
+    from records_manager.db import Patient
+    from records_manager.scanning import ocr
 
     view = app._screen._view
-    fixtures = Path("tests/fixtures")
-    typical = render_form((fixtures / "typical_form.txt").read_text("utf-8"),
-                          workspace / "typical.png")
-    hyphenated = render_form(
-        (fixtures / "hyphenated_surname.txt").read_text("utf-8"),
-        workspace / "hyphenated.png")
+    sample = Path(__file__).resolve().parents[1] / "samples" / "admission-form.png"
 
-    def register(patient: Patient) -> None:
-        try:
-            app.patients.add(patient)
-        except RecordsError:
-            pass
+    if not ocr.is_available():
+        print("  !! Tesseract is not available: set TESSERACT_CMD, or these "
+              "shots will show an unread form")
 
-    # 1. Opened with no scanner and no Tesseract: both explained, not hidden.
-    capture_dialog(app, view._scan, "30-scan-unavailable")
+    # 1. Nothing loaded yet: the fields are shut until a form arrives.
+    #    Where the scanner or Tesseract is missing, this is also where the
+    #    dialog says so -- not visible here, since both are installed.
+    capture_dialog(app, view._scan, "30-scan-empty")
 
-    # 2. A form loaded and read, ready for review. 20481 is not registered,
-    #    so this is a new patient.
+    # 2. The form read. 20481 is not in the register, so it is a new patient.
     capture_dialog(app, view._scan, "31-scan-review",
-                   fill=lambda d: load_form(d, typical, "typical_form"))
+                   fill=lambda d: open_sample(d, sample))
 
-    # 3. The same form, now that 20481 belongs to the patient named on it:
-    #    a returning patient, so attach rather than create a second record.
-    register(Patient("20481", "Ncube", "Thandiwe", "Box 6"))
+    # 3. The same form once 20481 belongs to the patient named on it: a
+    #    returning patient, so attach the scan rather than duplicate them.
+    app.patients.add(Patient("20481", "Ncube", "Thandiwe", "Box 6"))
     capture_dialog(app, view._scan, "32-scan-existing",
-                   fill=lambda d: load_form(d, typical, "typical_form"))
+                   fill=lambda d: open_sample(d, sample))
 
-    # 4. A form whose number lands on somebody else's file. The name on the
-    #    paper disagrees with the record, which is what a misread digit
-    #    looks like.
-    register(Patient("50287", "Gumbo", "Tendai John", "Box 2"))
+    # 4. The same number, now belonging to somebody else. That is what a
+    #    misread digit looks like from the inside.
+    app.patients.update("20481", Patient("20481", "Gumbo", "Tendai John",
+                                         "Box 2"))
     capture_dialog(app, view._scan, "33-scan-name-mismatch",
-                   fill=lambda d: load_form(d, hyphenated, "hyphenated_surname"))
+                   fill=lambda d: open_sample(d, sample))
+
+    app.patients.delete("20481")
+    view.refresh()
+    app.update()
 
 
 def capture_patients(app: App) -> None:

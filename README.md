@@ -71,6 +71,13 @@ That brings in `pytesseract`, `opencv-python-headless` and, on Windows,
 Scanning uses Windows Image Acquisition and so is Windows-only. Everywhere
 else, open a scanned image from disk instead.
 
+The OCR path has been run end to end on **Tesseract 5.5.3**: the screenshots
+of the scan flow below are of `samples/admission-form.png` actually being
+read — preprocessed, passed through Tesseract, and parsed into the review
+form — not of values filled in by hand. Regenerate them with
+`python tools/screenshots.py`, setting `TESSERACT_CMD` first if Tesseract is
+not on your `PATH`.
+
 ## Run
 
 ```bash
